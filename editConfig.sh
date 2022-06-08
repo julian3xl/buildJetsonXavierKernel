@@ -1,10 +1,10 @@
 #!/bin/bash
-# Edit the kernel configuration for NVIDIA Jetson AGX Xavier Development Kit
-# Copyright (c) 2016-20 Jetsonhacks 
+# Edit the kernel configuration for NVIDIA Jetson AGX Xavier/Orin Development Kit
+# Copyright (c) 2016-20 Jetsonhacks, 2021-22 julian3xl
 # MIT License
 
 SOURCE_TARGET="/usr/src"
-KERNEL_RELEASE="4.9"
+KERNEL_RELEASE="5.10"
 
 function usage
 {
@@ -17,7 +17,7 @@ function usage
 while [ "$1" != "" ]; do
     case $1 in
         -d | --directory )      shift
-				SOURCE_TARGET=$1
+        SOURCE_TARGET=$1
                                 ;;
         -h | --help )           usage
                                 exit

@@ -1,12 +1,11 @@
 #!/bin/bash
-# Get the kernel source for NVIDIA Jetson AGX Xavier Developer Kit, L4T
-# Copyright (c) 2016-2021 Jetsonhacks, julian3xl
+# Get the kernel source for NVIDIA Jetson AGX Xavier/Orin Developer Kit, L4T
+# Copyright (c) 2016-2021 Jetsonhacks, 2021-2022 julian3xl
 # MIT License
 
-JETSON_MODEL="AGX Xavier"
-L4T_TARGET="32.5.1"
+L4T_TARGET="34.1.1"
 SOURCE_TARGET="/usr/src"
-KERNEL_RELEASE="4.9"
+KERNEL_RELEASE="5.10"
 
 #Get the Board Model
 JETSON_BOARD="UNKNOWN"
@@ -19,10 +18,16 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
             echo Nano/TX1 ;;
         24)
             echo TX2 ;;
-	25)
+        25)
             echo AGX Xavier ;;
     esac)
     JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+elif [ -f /proc/device-tree/model ]; then
+    JETSON_DESCRIPTION=$(tr -d '\0' < /proc/device-tree/model)
+    JETSON_BOARD=$(case $JETSON_DESCRIPTION in
+        "NVIDIA Orin Jetson-Small Developer Kit")
+            echo Orin ;;
+    esac)
 fi
 echo "Jetson Model: "$JETSON_BOARD
 
@@ -34,22 +39,22 @@ JETSON_L4T=""
 function check_L4T_version()
 {
         if [ -f /etc/nv_tegra_release ]; then
-		JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
-		JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 2 -d ' ' | grep -Po '(?<=R)[^;]+')
-		JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | grep -Po '(?<=REVISION: )[^;]+')
+        JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
+        JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 2 -d ' ' | grep -Po '(?<=R)[^;]+')
+        JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | grep -Po '(?<=REVISION: )[^;]+')
                 JETSON_L4T_VERSION=$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION
 
-	else
-		echo "$LOG Reading L4T version from \"dpkg-query --show nvidia-l4t-core\""
+    else
+        echo "$LOG Reading L4T version from \"dpkg-query --show nvidia-l4t-core\""
 
-		JETSON_L4T_STRING=$(dpkg-query --showformat='${Version}' --show nvidia-l4t-core)
+        JETSON_L4T_STRING=$(dpkg-query --showformat='${Version}' --show nvidia-l4t-core)
                 # For example: 32.2.1-20190812212815
                 JETSON_L4T_VERSION=$(echo $JETSON_L4T_STRING | cut -d '-' -f 1)
                 JETSON_L4T_RELEASE=$(echo $JETSON_L4T_VERSION | cut -d '.' -f 1)
                 # # operator remove prefix in string operations in bash script. Don't forget . eg "32."
                 JETSON_L4T_REVISION=${JETSON_L4T_VERSION#$JETSON_L4T_RELEASE.}
         fi
-	echo "$LOG Jetson BSP Version:  L4T R$JETSON_L4T_VERSION"
+    echo "$LOG Jetson BSP Version:  L4T R$JETSON_L4T_VERSION"
 
 }
 
@@ -67,7 +72,7 @@ function usage
 while [ "$1" != "" ]; do
     case $1 in
         -d | --directory )      shift
-				SOURCE_TARGET=$1
+                SOURCE_TARGET=$1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -97,32 +102,21 @@ set -e
 # Determine the correct kernel version
 # The KERNEL_BUILD_VERSION is the release tag for the JetsonHacks buildKernel repository
 KERNEL_BUILD_VERSION=master
-if [ "$JETSON_BOARD" == "$JETSON_MODEL" ] ; then
-  if [ $JETSON_L4T == "$L4T_TARGET" ] ; then
-     KERNEL_BUILD_VERSION=$L4T_TARGET
-  else
-   echo ""
-   tput setaf 1
-   echo "==== L4T Kernel Version Mismatch! ============="
-   tput sgr0
-   echo ""
-   echo "This repository is for modifying the kernel for a L4T "$L4T_TARGET "system."
-   echo "You are attempting to modify a L4T "$JETSON_MODEL "system with L4T "$JETSON_L4T
-   echo "The L4T releases must match!"
-   echo ""
-   echo "There may be versions in the tag/release sections that meet your needs"
-   echo ""
-   exit 1
-  fi
+if [ $JETSON_L4T == "$L4T_TARGET" ] ; then
+    KERNEL_BUILD_VERSION=$L4T_TARGET
 else
-   tput setaf 1
-   echo "==== Jetson Board Mismatch! ============="
-   tput sgr0
-    echo "Currently this script works for the $JETSON_MODEL."
-   echo "This processor appears to be a $JETSON_BOARD, which does not have a corresponding script"
-   echo ""
-   echo "Exiting"
-   exit 1
+echo ""
+tput setaf 1
+echo "==== L4T Kernel Version Mismatch! ============="
+tput sgr0
+echo ""
+echo "This repository is for modifying the kernel for a L4T "$L4T_TARGET "system."
+echo "You are attempting to modify a L4T system with L4T "$JETSON_L4T
+echo "The L4T releases must match!"
+echo ""
+echo "There may be versions in the tag/release sections that meet your needs"
+echo ""
+exit 1
 fi
 
 # Check to see if source tree is already installed
@@ -144,5 +138,3 @@ fi
 export SOURCE_TARGET
 # -E preserves environment variables
 sudo -E ./scripts/getKernelSources.sh
-
-

@@ -5,13 +5,13 @@
 
 echo "Source Target: "$SOURCE_TARGET
 
-MAKE_DIRECTORY="$SOURCE_TARGET"kernel/kernel-4.9
+MAKE_DIRECTORY="$SOURCE_TARGET"kernel/kernel-5.10
 
-cd "$SOURCE_TARGET"kernel/kernel-4.9
-# Get the number of CPUs 
+cd "$SOURCE_TARGET"kernel/kernel-5.10
+# Get the number of CPUs
 NUM_CPU=$(nproc)
 
-# Make the kernel Image 
+# Make the kernel Image
 time make -j$(($NUM_CPU - 1)) modules
 if [ $? -eq 0 ] ; then
   echo "Modules make successful"
@@ -33,5 +33,3 @@ else
 fi
 
 make modules_install
-
-

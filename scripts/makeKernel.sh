@@ -5,19 +5,19 @@
 
 echo "Source Target: "$SOURCE_TARGET
 
-MAKE_DIRECTORY="$SOURCE_TARGET"kernel/kernel-4.9
+MAKE_DIRECTORY="$SOURCE_TARGET"kernel/kernel-5.10
 
-cd "$SOURCE_TARGET"kernel/kernel-4.9
+cd "$SOURCE_TARGET"kernel/kernel-5.10
 # make prepare
-# Get the number of CPUs 
+# Get the number of CPUs
 NUM_CPU=$(nproc)
 
-# Make the kernel Image 
+# Make the kernel Image
 time make -j$(($NUM_CPU - 1)) Image
 if [ $? -eq 0 ] ; then
   echo "Image make successful"
   echo "Image file is here: "
-  echo "$SOURCE_TARGET""kernel/kernel-4.9/arch/arm64/boot/Image"
+  echo "$SOURCE_TARGET""kernel/kernel-5.10/arch/arm64/boot/Image"
 else
   # Try to make again; Sometimes there are issues with the build
   # because of lack of resources or concurrency issues
@@ -28,7 +28,7 @@ else
   if [ $? -eq 0 ] ; then
     echo "Image make successful"
     echo "Image file is here: "
-    echo "$SOURCE_TARGET""kernel/kernel-4.9/arch/arm64/boot/Image"
+    echo "$SOURCE_TARGET""kernel/kernel-5.10/arch/arm64/boot/Image"
   else
     # Try to make again
     echo "Make did not successfully build" >&2
@@ -36,5 +36,3 @@ else
     exit 1
   fi
 fi
-
-
